@@ -55,8 +55,15 @@ module.exports = function(grunt) {
           return nextFile();
         }
 
+        var tempPath = src + '.temp';
+
         // Ensure the dest folder exists
         grunt.file.mkdir(path.dirname(filePair.dest));
+
+        if (src === filePair.dest) {
+          fs.renameSync(src, tempPath);
+          src = tempPath;
+        }
 
         var srcStream = fs.createReadStream(src);
         var destStream = fs.createWriteStream(filePair.dest);
@@ -69,6 +76,9 @@ module.exports = function(grunt) {
         });
 
         destStream.on('close', function() {
+          if (fs.existsSync(tempPath)) {
+            fs.unlinkSync(tempPath);
+          }
           grunt.log.writeln('Created ' + chalk.cyan(filePair.dest) + ' (' + exports.getSize(filePair.dest) + ')');
           nextFile();
         });
